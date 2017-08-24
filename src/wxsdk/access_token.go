@@ -27,9 +27,15 @@ type TokenRsp struct {
     ExpireIn int                `json:"expires_in"`
 }
 
+// =========对外接口==========
+
 //获取AccessToken
 var AccessToken func() string
+//主动刷新token
+var RefreshAccessToken func() (int, error)
 
+
+//========================================================
 //维护AccessToken
 func keepAccessToken() {
     var _token = new(accessToken)
@@ -40,19 +46,28 @@ func keepAccessToken() {
         return _token.token
     }
 
+	RefreshAccessToken = func() (int, error) {
+		token, expirein, err := requestAccessToken()
+		if err != nil {
+			fmt.Printf("requestAccessToken error %v\n", err)
+			return 0, err
+		}
+		fmt.Printf("requestAccessToken success: expire %v, token %v\n", expirein, token)
+		_token.Lock()
+		_token.token = token
+		_token.Unlock()
+
+		return expirein, nil
+	}
+
     // for 循环刷新
     go func() {
         for {
-            token, expirein, err := requestAccessToken()
-            if err != nil {
-                fmt.Printf("requestAccessToken error %v\n", err)
-                time.Sleep(time.Minute)
-                continue
-            }
-            fmt.Printf("requestAccessToken success: expire %v, token %v\n", expirein, token)
-            _token.Lock()
-            _token.token = token
-            _token.Unlock()
+	        expirein, err := RefreshAccessToken()
+	        if err != nil {
+		        time.Sleep(time.Minute)
+		        continue
+	        }
 
             timer := time.NewTimer(time.Second * time.Duration(expirein))
             <- timer.C
