@@ -2,7 +2,12 @@ package wxsdk
 
 import (
     "fmt"
+	"time"
     "net/http"
+)
+
+var (
+	MenuBtns []Button
 )
 
 func Init() error {
@@ -13,6 +18,16 @@ func Serve() {
     // 维护AccessToken
     keepAccessToken()
 
+	go func() {
+		time.Sleep(5 * time.Second)
+		if len(MenuBtns) > 0 {
+			err := CreateMenu(MenuBtns)
+			if err != nil {
+				fmt.Printf("CustomsizeMenu failed: %v\n", err)
+			}
+		}
+	}()
+
     //http.Serve
     http.Handle("/weixin", &defaultServeMux)
     err := http.ListenAndServe("0.0.0.0:80", nil)
@@ -21,8 +36,12 @@ func Serve() {
     }
 }
 
-//自定义消息回复
-func HandleMsg(hdl interface{}) {
+func CustomsizeMenu(buttons []Button) {
+	MenuBtns = buttons
+}
+
+//自定义普通消息回复
+func HandlePlain(hdl interface{}) {
 }
 
 //自定义事件处理

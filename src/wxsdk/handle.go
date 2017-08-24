@@ -21,21 +21,26 @@ var (
 type handleFunc func(ctx *RequestContext, reqMsg *Message)
 
 func init() {
-	handles[MsgTypeText]  = defaultTextHandle
-	handles[MsgTypeImage] = defaultImageHandle
+	handles[MsgTypeText]            = defaultPlainHandle
+	handles[MsgTypeImage]           = defaultPlainHandle
+	handles[EventTypeSubscribe]     = defaultEventHandle
+	handles[EventTypeUnsubscribe]   = defaultEventHandle
 }
 
 func (wh *WXSDKHandle)ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		//TODO
 		fmt.Printf("parse form error: %v\n", err)
+		http.Error(w, "", http.StatusBadRequest)
+		return
 	}
 	fmt.Printf("handle http request, method %v\n", r.Method)
 
     //校验签名
 	if !wh.checkSignature(r) {
 		fmt.Println("checkSignature error")
+		http.Error(w, "", http.StatusUnauthorized)
+		return
 	}
 
 	switch (r.Method) {
@@ -47,6 +52,7 @@ func (wh *WXSDKHandle)ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		wh.handlePost(w, r)
 	default:
 		fmt.Printf("inv http method %v\n", r.Method)
+		http.Error(w, "only GET or POST method allowed", http.StatusBadRequest)
 	}
 }
 
@@ -79,7 +85,7 @@ func (wh *WXSDKHandle) handlePost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
-	fmt.Printf("reqmsg: %+v\n", reqMsg)
+	fmt.Printf("incoming reqmsg: type %v\n", reqMsg.MsgType)
 
 	var ctx RequestContext
 	ctx.ToUserName = reqMsg.FromUserName
@@ -103,4 +109,13 @@ func (wh *WXSDKHandle) unpackPkg(r *http.Request, m *Message) error {
 		return err
 	}
 	return xml.Unmarshal(data, m)
+}
+
+func replySuccess(ctx *RequestContext) {
+	ctx.w.Write([]byte("success"))
+}
+
+
+func replyOK(ctx *RequestContext) {
+	ctx.w.Write([]byte(""))
 }
