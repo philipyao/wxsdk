@@ -7,11 +7,12 @@ import(
 )
 
 const (
-    //APPID           = "wxa2f6ba782c07b339"
-    //APPSecret       = "d49da064fcca4c57d191f3484d6f9748"
+    //测试号
+    //APPID           = "wx4d953a6ad5112405"
+    //APPSecret       = "56657d6773e91ee3a2814273b9813fc0"
 
-    APPID           = "wx4d953a6ad5112405"
-    APPSecret       = "56657d6773e91ee3a2814273b9813fc0"
+    APPID           = "wxe5c18b742279f207"
+    APPSecret       = "9153504404a33eb02e3b2298b58111fd"
     UrlAccessToken  = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=%v&secret=%v"
 )
 
@@ -46,7 +47,7 @@ func keepAccessToken() {
         return _token.token
     }
 
-	RefreshAccessToken = func() (int, error) {
+    RefreshAccessToken = func() (int, error) {
 		token, expirein, err := requestAccessToken()
 		if err != nil {
 			fmt.Printf("requestAccessToken error %v\n", err)

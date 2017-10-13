@@ -37,6 +37,8 @@ const (
 	UrlMediaUpload              = "https://api.weixin.qq.com/cgi-bin/material/add_material?access_token=%v&type=%v"
 	UrlMediaUploadNews          = "https://api.weixin.qq.com/cgi-bin/material/add_news?access_token=%v"
 	UrlMediaUploadNewsImg       = "https://api.weixin.qq.com/cgi-bin/media/uploadimg?access_token=%v"
+    UrlMediaList                = "https://api.weixin.qq.com/cgi-bin/material/batchget_material?access_token=%v"
+    UrlMediaGet                 = "https://api.weixin.qq.com/cgi-bin/material/get_material?access_token=%v"
 )
 
 const (
@@ -54,6 +56,14 @@ const (
 	UrlMenuCreate               = "https://api.weixin.qq.com/cgi-bin/menu/create?access_token=%v"
 	UrlMenuGet                  = "https://api.weixin.qq.com/cgi-bin/menu/get?access_token=%v"
 	UrlMenuDelete               = "https://api.weixin.qq.com/cgi-bin/menu/delete?access_token=%v"
+
+    UrlTagList                  = "https://api.weixin.qq.com/cgi-bin/tags/get?access_token=%v"
+    UrlTagAdd                   = "https://api.weixin.qq.com/cgi-bin/tags/create?access_token=%v"
+    UrlTagBatchSet              = "https://api.weixin.qq.com/cgi-bin/tags/members/batchtagging?access_token=%v"
+
+    UrlFansList                 = "https://api.weixin.qq.com/cgi-bin/user/get?access_token=%v"
+    UrlTagFansList              = "https://api.weixin.qq.com/cgi-bin/user/tag/get?access_token=%v"
+    UrlFansBatchGet             = "https://api.weixin.qq.com/cgi-bin/user/info/batchget?access_token=%v"
 )
 
 type MsgBase struct {

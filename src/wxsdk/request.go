@@ -11,6 +11,10 @@ import (
 	"encoding/json"
 )
 
+const (
+    ContentTypeJson         = "application/json"
+    ContentTypeText         = "text/plain"
+)
 
 func getJson(targetUrl string, reply interface{}) error {
 	resp, err := http.Get(targetUrl)
@@ -34,6 +38,7 @@ func getJson(targetUrl string, reply interface{}) error {
 	return nil
 }
 
+
 func postJson(targetUrl string, pkg interface{}) ([]byte, error) {
 	data, err := json.Marshal(pkg)
 	if err != nil {
@@ -41,7 +46,7 @@ func postJson(targetUrl string, pkg interface{}) ([]byte, error) {
 		return nil, err
 	}
 	reader := bytes.NewBuffer(data)
-	resp, err := http.Post(targetUrl, "application/json", reader)
+	resp, err := http.Post(targetUrl, ContentTypeJson, reader)
 	if err != nil {
 		return nil, err
 	}
@@ -57,13 +62,38 @@ func postJson(targetUrl string, pkg interface{}) ([]byte, error) {
 	return resp_body, nil
 }
 
+//给WX服务器发送请求，请求包一般为json格式
+//返回格式为文本格式或者二进制，需要区别处理
+func requestWeiXin(url string, pkg interface{}) (content []byte, contentType string, err error) {
+    data, err := json.Marshal(pkg)
+    if err != nil {
+        fmt.Println(err)
+        return nil, "", err
+    }
+    reader := bytes.NewBuffer(data)
+    resp, err := http.Post(url, ContentTypeJson, reader)
+    if err != nil {
+        return nil, "", err
+    }
+    if resp.StatusCode != http.StatusOK {
+        return nil, "", fmt.Errorf("%v", resp.Status)
+    }
+
+    defer resp.Body.Close()
+    resp_body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        return nil, "", err
+    }
+    return resp_body, resp.Header.Get("Content-Type"), nil
+}
+
 //上传文件，支持附带额外参数
-func postFile(targetUrl string, filename string, params map[string]string) ([]byte, error) {
+func postFile(url, filename, fieldname string, params map[string]string) ([]byte, error) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
 	//关键的一步操作
-	fileWriter, err := bodyWriter.CreateFormFile("uploadfile", filename)
+	fileWriter, err := bodyWriter.CreateFormFile(fieldname, filename)
 	if err != nil {
 		fmt.Println("error writing to buffer")
 		return nil, err
@@ -92,7 +122,7 @@ func postFile(targetUrl string, filename string, params map[string]string) ([]by
 	contentType := bodyWriter.FormDataContentType()
 	bodyWriter.Close()
 
-	resp, err := http.Post(targetUrl, contentType, bodyBuf)
+	resp, err := http.Post(url, contentType, bodyBuf)
 	if err != nil {
 		return nil, err
 	}
