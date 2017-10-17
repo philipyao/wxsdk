@@ -51,7 +51,7 @@ type MenuRsp struct {
 
 type Menu struct {
 	Button []Button `json:"button"`
-	MenuId int      `json:"menuid"` // 菜单 id
+	MenuId int      `json:"menuid,omitempty"` // 菜单 id
 }
 
 // Button 菜单上的按钮
@@ -203,7 +203,7 @@ func CreateMenu(buttons []Button) error {
 		fmt.Println(err.Error())
 		return err
 	}
-	fmt.Println("postMenu success.")
+	fmt.Println("update menu success.")
 	return nil
 }
 
@@ -222,7 +222,7 @@ func GetMenu() (*Menu, error) {
 		fmt.Println(err.Error())
 		return nil, err
 	}
-	fmt.Printf("getMenu success: %+v\n", mrsp.Menu)
+	fmt.Println("GetMenu success.")
 	return mrsp.Menu, nil
 }
 

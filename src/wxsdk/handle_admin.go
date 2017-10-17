@@ -57,6 +57,13 @@ type AdminMaterialGetRsp struct {
     URL             string          `json:"url"`
 }
 
+type AdminMenuUpdateReq struct {
+    Button          []Button        `json:"button"`
+}
+type AdminMenuUpdateRsp struct {
+    ErrCode         int             `json:"errcode"`
+    ErrMessage      string          `json:"errmsg"`
+}
 
 func handle_admin() {
 
@@ -347,6 +354,54 @@ func handle_admin() {
         }
         rsp.URL = url
 
+        doWriteJson(w, rsp)
+    })
+
+    http.HandleFunc("/api/admin/wechat/menu/get", func(w http.ResponseWriter, r *http.Request) {
+        if r.Method != "GET" {
+            fmt.Printf("handle http request, method %v\n", r.Method)
+            http.Error(w, "inv method", http.StatusBadRequest)
+            return
+        }
+
+        menu, err := GetMenu()
+        if err != nil {
+            fmt.Println(err)
+            http.Error(w, err.Error(), http.StatusBadRequest)
+            return
+        }
+        doWriteJson(w, menu)
+    })
+
+    http.HandleFunc("/api/admin/wechat/menu/update", func(w http.ResponseWriter, r *http.Request) {
+        if r.Method != "POST" {
+            fmt.Printf("handle http request, method %v\n", r.Method)
+            http.Error(w, "inv method", http.StatusBadRequest)
+            return
+        }
+        //body不用表单，数据需要自己从body解析
+        reqdata, err := ioutil.ReadAll(r.Body)
+        if err != nil {
+            fmt.Printf("read body error %v\n", err)
+            return
+        }
+        if len(reqdata) == 0 {
+            http.Error(w, "no reqdata for menu/update", http.StatusBadRequest)
+            return
+        }
+        var req AdminMenuUpdateReq
+        err = json.Unmarshal(reqdata, &req)
+        if err != nil {
+            http.Error(w, "error parse json reqdata for tag/batch_set", http.StatusBadRequest)
+            return
+        }
+
+        var rsp AdminMenuUpdateRsp
+        err = CreateMenu(req.Button)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusBadRequest)
+            return
+        }
         doWriteJson(w, rsp)
     })
 }
