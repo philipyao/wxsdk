@@ -2,7 +2,6 @@ package wxsdk
 
 import (
     "fmt"
-	"time"
     "net/http"
     "image/color"
     "image/png"
@@ -11,7 +10,6 @@ import (
 )
 
 var (
-	MenuBtns []Button
     cap *captcha.Captcha
 
     loginRsp []byte = make([]byte, 1000000)
@@ -43,16 +41,6 @@ func Serve() {
     // 维护AccessToken
     keepAccessToken()
 
-	go func() {
-		time.Sleep(5 * time.Second)
-		if len(MenuBtns) > 0 {
-			err := CreateMenu(MenuBtns)
-			if err != nil {
-				fmt.Printf("CustomsizeMenu failed: %v\n", err)
-			}
-		}
-	}()
-
     //http.Serve
     http.Handle("/weixin", &defaultServeMux)
     //files
@@ -82,10 +70,6 @@ func Serve() {
     if err != nil {
         fmt.Printf("ListenAndServe error: %v\n", err)
     }
-}
-
-func CustomsizeMenu(buttons []Button) {
-	MenuBtns = buttons
 }
 
 //自定义普通消息回复

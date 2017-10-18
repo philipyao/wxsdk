@@ -192,7 +192,7 @@ func CreateMenu(buttons []Button) error {
 		return err
 	}
 
-	var mrsp MenuRsp
+    var mrsp WeiXinRspHeader
 	err = json.Unmarshal(resp, &mrsp)
 	if err != nil {
 		fmt.Println(err)
@@ -229,7 +229,7 @@ func GetMenu() (*Menu, error) {
 // DeleteMenu 删除菜单
 func DeleteMenu() (err error) {
 	url := fmt.Sprintf(UrlMenuDelete, AccessToken())
-	var mrsp MenuRsp
+	var mrsp WeiXinRspHeader
 	err = getJson(url, &mrsp)
 	if err != nil {
 		return err

@@ -404,6 +404,21 @@ func handle_admin() {
         }
         doWriteJson(w, rsp)
     })
+
+    http.HandleFunc("/api/admin/wechat/menu/delete", func(w http.ResponseWriter, r *http.Request) {
+        if r.Method != "POST" {
+            fmt.Printf("handle http request, method %v\n", r.Method)
+            http.Error(w, "inv method", http.StatusBadRequest)
+            return
+        }
+
+        err := DeleteMenu()
+        if err != nil {
+            fmt.Println(err)
+            http.Error(w, err.Error(), http.StatusBadRequest)
+            return
+        }
+    })
 }
 
 

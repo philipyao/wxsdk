@@ -12,3 +12,12 @@
 
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
+
+#
+#
+bin
+pkg
+src/.idea
+src/github.com
+src/golang.org
+src/wxsdk/.idea
