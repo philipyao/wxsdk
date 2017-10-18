@@ -1,0 +1,108 @@
+{
+	"code": 200,
+	"data": {
+		"alias": {
+			"ADD_MERCHANT": 1,
+			"MERCHANT_VIEW": 1,
+			"ROLE_AUTH_ROlE": 1,
+			"ROLE_AUTH_RULE": 1
+		},
+		"menu": [
+			{
+				"auth": 1,
+				"component": "Example",
+				"create_time": 1505210838,
+				"icon": "ios-keypad",
+				"id": 1,
+				"name": "微信管理",
+				"path": "/example",
+				"children": [
+					{
+						"auth": 1,
+						"component": "wechat/Fans",
+						"create_time": 1505210838,
+						"id": 1001,
+						"name": "粉丝管理",
+						"path": "wechat_fans"
+					},
+					{
+						"auth": 1,
+						"component": "wechat/Message",
+						"create_time": 1505210838,
+						"id": 1002,
+						"name": "消息管理",
+						"path": "wechat_message"
+					},
+					{
+						"auth": 1,
+						"component": "wechat/Autoreply",
+						"create_time": 1505210838,
+						"id": 1003,
+						"name": "自动回复",
+						"path": "wechat_autoreply"
+					},
+					{
+						"auth": 1,
+						"component": "wechat/Broadcast",
+						"create_time": 1505210838,
+						"id": 1004,
+						"name": "消息群发",
+						"path": "wechat_broadcast"
+					},
+					{
+						"auth": 1,
+						"component": "wechat/Menu",
+						"create_time": 1505210838,
+						"id": 1005,
+						"name": "自定义菜单",
+						"path": "wechat_menu"
+					}
+                ]
+			},
+			{
+				"auth": 1,
+				"component": "Example",
+				"create_time": 1505210838,
+				"icon": "ios-keypad",
+				"id": 2,
+				"name": "文章素材",
+				"path": "/example",
+				"children": [
+					{
+						"auth": 1,
+						"component": "archives/Material",
+						"create_time": 1505210838,
+						"id": 2001,
+						"name": "素材管理",
+						"path": "archives_material"
+					},
+					{
+						"auth": 1,
+						"component": "archives/Article",
+						"create_time": 1505210838,
+						"id": 2002,
+						"name": "文章列表",
+						"path": "archives_article"
+					},
+					{
+						"auth": 1,
+						"component": "archives/Group",
+						"create_time": 1505210838,
+						"id": 2003,
+						"name": "文章分类",
+						"path": "archives_group"
+					}
+                ]
+			}			
+		],
+		"token": "Ox4bwEj5_PcLjF8pDs7PDLqqwOK6Gm766HNTWulifodwxQ0vn8kyRj-8xrBAXP08EGawBJqW0K8RXaqJ1EsDjA",
+		"user_info": {
+			"uid": 1,
+			"user_name": "admin"
+		}
+	},
+	"msg": "登录成功",
+	"status": true,
+	"time": 1505210838
+}
+
