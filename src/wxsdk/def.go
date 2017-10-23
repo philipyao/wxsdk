@@ -66,6 +66,10 @@ const (
     UrlFansBatchGet             = "https://api.weixin.qq.com/cgi-bin/user/info/batchget?access_token=%v"
 )
 
+const (
+    WXCodeMenuNotExist          = 46003
+)
+
 type MsgBase struct {
 	XMLName         xml.Name `xml:"xml"`
 	ToUserName      string   `xml:"ToUserName"`             //开发者微信号

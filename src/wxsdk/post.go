@@ -218,6 +218,9 @@ func GetMenu() (*Menu, error) {
 	}
 
 	if mrsp.ErrorCode != 0 {
+        if mrsp.ErrorCode == WXCodeMenuNotExist {
+            return &Menu{Button:[]Button{}}, nil
+        }
 		err = fmt.Errorf("getMenu error %v, %v", mrsp.ErrorCode, mrsp.ErrorMessage)
 		fmt.Println(err.Error())
 		return nil, err
