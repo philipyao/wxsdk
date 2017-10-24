@@ -7,6 +7,7 @@ import (
     "image/png"
     "github.com/afocus/captcha"
     "os"
+    "wxsdk/access_token"
 )
 
 var (
@@ -39,7 +40,7 @@ func Serve() {
     var err error
 
     // 维护AccessToken
-    keepAccessToken()
+    access_token.StartAccessToken()
 
     //http.Serve
     http.Handle("/weixin", &defaultServeMux)

@@ -1,10 +1,12 @@
-package wxsdk
+package wxproto
 
 import (
 	"fmt"
     "os"
 	"errors"
 	"encoding/json"
+    "wxsdk/utils"
+    "wxsdk/access_token"
 )
 
 //素材上传返回信息
@@ -93,6 +95,11 @@ type BatchSetTagRsp struct {
     WeiXinRspHeader
 }
 
+type WXTagBatchSetReq struct {
+    Tagids          []int           `json:"tagids"`
+    OpenidList      []string        `json:"openid_list"`
+}
+
 // 拉取粉丝列表
 type FansListRsp struct {
     WeiXinRspHeader
@@ -156,6 +163,13 @@ type WXListMaterialRsp struct {
     ItemCount           int                     `json:"item_count"`
     Item                []*MaterialProfile      `json:"item"`
 }
+type MaterialProfile struct {
+    MediaID         string          `json:"media_id"`
+    Name            string          `json:"name"`
+    UpdateTime      int             `json:"update_time"`
+    URL             string          `json:"url"`
+}
+
 type Materials struct {
     TotalCount          int
     ItemCount           int
@@ -186,8 +200,8 @@ func CreateMenu(buttons []Button) error {
 		Button []Button `json:"button"`
 	}{buttons}
 
-	url := fmt.Sprintf(UrlMenuCreate, AccessToken())
-	resp, err := postJson(url, menu)
+	url := fmt.Sprintf(UrlMenuCreate, access_token.AccessToken())
+	resp, err := utils.PostJson(url, menu)
 	if err != nil {
 		return err
 	}
@@ -209,10 +223,10 @@ func CreateMenu(buttons []Button) error {
 
 // getMenu查询菜单
 func GetMenu() (*Menu, error) {
-	url := fmt.Sprintf(UrlMenuGet, AccessToken())
+	url := fmt.Sprintf(UrlMenuGet, access_token.AccessToken())
 
 	var mrsp MenuRsp
-	err := getJson(url, &mrsp)
+	err := utils.GetJson(url, &mrsp)
 	if err != nil {
 		return nil, err
 	}
@@ -231,9 +245,9 @@ func GetMenu() (*Menu, error) {
 
 // DeleteMenu 删除菜单
 func DeleteMenu() (err error) {
-	url := fmt.Sprintf(UrlMenuDelete, AccessToken())
+	url := fmt.Sprintf(UrlMenuDelete, access_token.AccessToken())
 	var mrsp WeiXinRspHeader
-	err = getJson(url, &mrsp)
+	err = utils.GetJson(url, &mrsp)
 	if err != nil {
 		return err
 	}
@@ -251,8 +265,8 @@ func DeleteMenu() (err error) {
 //////////  用户标签  ////////////////////////
 
 func ListTag(rsp *TagsRsp) (err error) {
-    url := fmt.Sprintf(UrlTagList, AccessToken())
-    err = getJson(url, rsp)
+    url := fmt.Sprintf(UrlTagList, access_token.AccessToken())
+    err = utils.GetJson(url, rsp)
     if err != nil {
         fmt.Println(err.Error())
         return err
@@ -268,10 +282,10 @@ func ListTag(rsp *TagsRsp) (err error) {
 }
 
 func AddTag(name string, rsp *AddTagRsp) (err error) {
-    url := fmt.Sprintf(UrlTagAdd, AccessToken())
+    url := fmt.Sprintf(UrlTagAdd, access_token.AccessToken())
     var req AddTagReq
     req.Tag = &TagEntry{Name: name}
-    data, err := postJson(url, req)
+    data, err := utils.PostJson(url, req)
     if err != nil {
         fmt.Println(err.Error())
         return err
@@ -292,14 +306,14 @@ func AddTag(name string, rsp *AddTagRsp) (err error) {
     return nil
 }
 
-func BatchSetTag(req *AdminTagBatchSetReq, rsp *AdminTagBatchSetRsp) (err error) {
-    url := fmt.Sprintf(UrlTagBatchSet, AccessToken())
+func BatchSetTag(req *WXTagBatchSetReq, rsp *WeiXinRspHeader) (err error) {
+    url := fmt.Sprintf(UrlTagBatchSet, access_token.AccessToken())
 
     var onereq BatchSetTagReq
     onereq.OpenidList = req.OpenidList
     for _, tagid := range req.Tagids {
         onereq.Tagid = tagid
-        data, err := postJson(url, onereq)
+        data, err := utils.PostJson(url, onereq)
         if err != nil {
             fmt.Println(err.Error())
             return err
@@ -315,7 +329,7 @@ func BatchSetTag(req *AdminTagBatchSetReq, rsp *AdminTagBatchSetRsp) (err error)
         if onersp.ErrorCode != 0 {
             err = fmt.Errorf("BatchSetTag<%v> error %v, %v", tagid, onersp.ErrorCode, onersp.ErrorMessage)
             fmt.Println(err.Error())
-            rsp.ErrCode = onersp.ErrorCode
+            rsp.ErrorCode = onersp.ErrorCode
             return err
         }
         fmt.Printf("BatchSetTag<%v> done\n", tagid)
@@ -329,8 +343,8 @@ func BatchSetTag(req *AdminTagBatchSetReq, rsp *AdminTagBatchSetRsp) (err error)
 
 //==== 全部粉丝列表
 func ListFans(rsp *FansListRsp) (err error) {
-    url := fmt.Sprintf(UrlFansList, AccessToken())
-    err = getJson(url, rsp)
+    url := fmt.Sprintf(UrlFansList, access_token.AccessToken())
+    err = utils.GetJson(url, rsp)
     if err != nil {
         fmt.Println(err.Error())
         return err
@@ -347,12 +361,12 @@ func ListFans(rsp *FansListRsp) (err error) {
 
 //==== 特定tag粉丝列表
 func ListTagFans(tagid int, rsp *ListTagFansRsp) (err error) {
-    url := fmt.Sprintf(UrlTagFansList, AccessToken())
+    url := fmt.Sprintf(UrlTagFansList, access_token.AccessToken())
 
     var req ListTagFansReq
     req.Tagid = tagid
 
-    data, err := postJson(url, &req)
+    data, err := utils.PostJson(url, &req)
     if err != nil {
         fmt.Println(err.Error())
         return err
@@ -375,13 +389,13 @@ func ListTagFans(tagid int, rsp *ListTagFansRsp) (err error) {
 
 //==== 批量
 func BatchGetFansInfo(openids []string, rsp *BatchGetFansInfoRsp) (err error) {
-    url := fmt.Sprintf(UrlFansBatchGet, AccessToken())
+    url := fmt.Sprintf(UrlFansBatchGet, access_token.AccessToken())
     var req BatchGetFansInfoReq
     req.UserList = make([]*FansOpenid, len(openids))
     for i, openid := range openids {
         req.UserList[i] = &FansOpenid{Openid: openid}
     }
-    data, err := postJson(url, req)
+    data, err := utils.PostJson(url, req)
     if err != nil {
         fmt.Println(err.Error())
         return err
@@ -408,12 +422,12 @@ func BatchGetFansInfo(openids []string, rsp *BatchGetFansInfoRsp) (err error) {
 // 拉取普通永久素材列表（图片、语音、视频）
 func ListMaterial(mtype string, offset, count int) (materials *Materials, err error) {
     fmt.Printf("ListMaterial: mtype %v, offset %v, count %v\n", mtype, offset, count)
-    url := fmt.Sprintf(UrlMediaList, AccessToken())
+    url := fmt.Sprintf(UrlMediaList, access_token.AccessToken())
     var req WXListMaterialReq
     req.Type = mtype
     req.Offset = offset
     req.Count = count
-    data, err := postJson(url, req)
+    data, err := utils.PostJson(url, req)
     if err != nil {
         fmt.Println(err.Error())
         return nil, err
@@ -441,16 +455,16 @@ func ListMaterial(mtype string, offset, count int) (materials *Materials, err er
 
 func GetMaterial(mediaID string) (string, error) {
     fmt.Printf("GetMaterial: mediaID %v\n", mediaID)
-    url := fmt.Sprintf(UrlMediaGet, AccessToken())
+    url := fmt.Sprintf(UrlMediaGet, access_token.AccessToken())
     var req WXGetMaterialReq
     req.MediaID = mediaID
-    content, contentType, err := requestWeiXin(url, req)
+    content, contentType, err := utils.RequestWeiXin(url, req)
     if err != nil {
         fmt.Println(err.Error())
         return "", err
     }
 
-    if contentType == ContentTypeText {
+    if contentType == utils.ContentTypeText {
         //有文本json格式, 错误返回
         errMsg := &WeiXinRspHeader{}
         err = json.Unmarshal(content, errMsg)
@@ -474,9 +488,9 @@ func GetMaterial(mediaID string) (string, error) {
 
 //上传临时素材
 //返回微信生成的media_id
-func postTempMedia(filename, mediaType string) (string, error) {
-    targetUrl := fmt.Sprintf(UrlTempMediaUpload, AccessToken(), mediaType)
-    resp, err := postFile(targetUrl, filename, "media", nil)
+func PostTempMedia(filename, mediaType string) (string, error) {
+    targetUrl := fmt.Sprintf(UrlTempMediaUpload, access_token.AccessToken(), mediaType)
+    resp, err := utils.PostFile(targetUrl, filename, "media", nil)
     if err != nil {
         return "", err
     }
@@ -499,9 +513,9 @@ func postTempMedia(filename, mediaType string) (string, error) {
 
 //上传永久普通素材(图片、语音)
 //返回微信生成的media_id
-func postMedia(filename, mediaType string) (string, error) {
-    targetUrl := fmt.Sprintf(UrlMediaUpload, AccessToken(), mediaType)
-    resp, err := postFile(targetUrl, filename, "media", nil)
+func PostMedia(filename, mediaType string) (string, error) {
+    targetUrl := fmt.Sprintf(UrlMediaUpload, access_token.AccessToken(), mediaType)
+    resp, err := utils.PostFile(targetUrl, filename, "media", nil)
     if err != nil {
         return "", err
     }
@@ -523,13 +537,13 @@ func postMedia(filename, mediaType string) (string, error) {
 
 //上传永久视频素材
 //返回微信生成的media_id
-func postVideo(filename, title, introduction string) (string, error) {
-    targetUrl := fmt.Sprintf(UrlMediaUpload, AccessToken(), MediaTypeVideo)
+func PostVideo(filename, title, introduction string) (string, error) {
+    targetUrl := fmt.Sprintf(UrlMediaUpload, access_token.AccessToken(), MediaTypeVideo)
     params := map[string]string{
         "title": title,
         "introduction": introduction,
     }
-    resp, err := postFile(targetUrl, filename, "media", params)
+    resp, err := utils.PostFile(targetUrl, filename, "media", params)
     if err != nil {
         return "", err
     }
@@ -552,9 +566,9 @@ func postVideo(filename, title, introduction string) (string, error) {
 //上传图片（永久图文素材内的图片）素材
 //不占用公众号的素材库中图片数量的5000个的限制
 //返回微信生成的图片url
-func postNewsImg(filename string) (string, error) {
-    targetUrl := fmt.Sprintf(UrlMediaUploadNewsImg, AccessToken())
-    resp, err := postFile(targetUrl, filename, "media", nil)
+func PostNewsImg(filename string) (string, error) {
+    targetUrl := fmt.Sprintf(UrlMediaUploadNewsImg, access_token.AccessToken())
+    resp, err := utils.PostFile(targetUrl, filename, "media", nil)
     if err != nil {
         return "", err
     }
@@ -577,9 +591,9 @@ func postNewsImg(filename string) (string, error) {
 
 //上传永久图文素材
 //返回微信生成的media_id
-func postNews(news *News) (string, error) {
-    targetUrl := fmt.Sprintf(UrlMediaUploadNews, AccessToken())
-    reply, err := postJson(targetUrl, news)
+func PostNews(news *News) (string, error) {
+    targetUrl := fmt.Sprintf(UrlMediaUploadNews, access_token.AccessToken())
+    reply, err := utils.PostJson(targetUrl, news)
     if err != nil {
         return "", err
     }

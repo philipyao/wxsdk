@@ -8,6 +8,7 @@ import(
     "io/ioutil"
     "io"
     "os"
+    "wxsdk/wxproto"
 )
 
 const (
@@ -19,9 +20,8 @@ type AdminFansListRsp struct {
     Total           int             `json:"total"`
     Count           int             `json:"count"`
     NextOpenid      string          `json:"next_openid"`
-    Fans            []*FansInfo     `json:"fans"`
+    Fans            []*wxproto.FansInfo     `json:"fans"`
 }
-
 
 type AdminTagBatchSetReq struct {
     Tagids          []int           `json:"tagids"`
@@ -41,13 +41,7 @@ type AdminMaterialCreateRsp struct {
 type AdminMaterialListRsp struct {
     ErrCode         int    `json:"errcode"`
     ErrMessage      string `json:"errmsg"`
-    Materials       []*MaterialProfile  `json:"materials"`
-}
-type MaterialProfile struct {
-    MediaID         string          `json:"media_id"`
-    Name            string          `json:"name"`
-    UpdateTime      int             `json:"update_time"`
-    URL             string          `json:"url"`
+    Materials       []*wxproto.MaterialProfile  `json:"materials"`
 }
 
 //图片、音频、视频都返回url来提供预览
@@ -58,8 +52,9 @@ type AdminMaterialGetRsp struct {
 }
 
 type AdminMenuUpdateReq struct {
-    Button          []Button        `json:"button"`
+    Button          []wxproto.Button        `json:"button"`
 }
+
 type AdminMenuUpdateRsp struct {
     ErrCode         int             `json:"errcode"`
     ErrMessage      string          `json:"errmsg"`
@@ -93,8 +88,8 @@ func handle_admin() {
             return
         }
 
-        var rsp TagsRsp
-        err := ListTag(&rsp)
+        var rsp wxproto.TagsRsp
+        err := wxproto.ListTag(&rsp)
         if err != nil {
             http.Error(w, err.Error(), http.StatusBadRequest)
             return
@@ -116,8 +111,8 @@ func handle_admin() {
         }
 
         tagname := r.FormValue("name")
-        var rsp AddTagRsp
-        err = AddTag(tagname, &rsp)
+        var rsp wxproto.AddTagRsp
+        err = wxproto.AddTag(tagname, &rsp)
         if err != nil {
             http.Error(w, err.Error(), http.StatusBadRequest)
             return
@@ -148,14 +143,17 @@ func handle_admin() {
             return
         }
 
-        var rsp AdminTagBatchSetRsp
-        err = BatchSetTag(&req, &rsp)
+        var wxreq wxproto.WXTagBatchSetReq
+        wxreq.Tagids = req.Tagids
+        wxreq.OpenidList = req.OpenidList
+        var wxrsp wxproto.WeiXinRspHeader
+        err = wxproto.BatchSetTag(&wxreq, &wxrsp)
         if err != nil {
             http.Error(w, err.Error(), http.StatusBadRequest)
             return
         }
 
-        doWriteJson(w, rsp)
+        doWriteJson(w, wxrsp)
     })
 
     http.HandleFunc("/api/admin/wechat/fans/list", func(w http.ResponseWriter, r *http.Request) {
@@ -181,8 +179,8 @@ func handle_admin() {
         fmt.Printf("fans list: tagid<%v>\n", tagid)
         if tagid == 0 {
             //拉取所有粉丝信息
-            var lrsp FansListRsp
-            err := ListFans(&lrsp)
+            var lrsp wxproto.FansListRsp
+            err := wxproto.ListFans(&lrsp)
             if err != nil {
                 http.Error(w, err.Error(), http.StatusBadRequest)
                 return
@@ -194,8 +192,8 @@ func handle_admin() {
             rsp.NextOpenid = lrsp.NextOpenid
 
             if len(lrsp.Data.Openid) > 0 {
-                var irsp BatchGetFansInfoRsp
-                err = BatchGetFansInfo(lrsp.Data.Openid, &irsp)
+                var irsp wxproto.BatchGetFansInfoRsp
+                err = wxproto.BatchGetFansInfo(lrsp.Data.Openid, &irsp)
                 if err != nil {
                     http.Error(w, err.Error(), http.StatusBadRequest)
                     return
@@ -206,8 +204,8 @@ func handle_admin() {
             doWriteJson(w, rsp)
         } else {
             //单独拉取某个tag的粉丝信息
-            var lrsp ListTagFansRsp
-            err := ListTagFans(tagid, &lrsp)
+            var lrsp wxproto.ListTagFansRsp
+            err := wxproto.ListTagFans(tagid, &lrsp)
             if err != nil {
                 http.Error(w, err.Error(), http.StatusBadRequest)
                 return
@@ -219,8 +217,8 @@ func handle_admin() {
             rsp.NextOpenid = lrsp.NextOpenid
 
             if len(lrsp.Data.Openid) > 0 {
-                var irsp BatchGetFansInfoRsp
-                err = BatchGetFansInfo(lrsp.Data.Openid, &irsp)
+                var irsp wxproto.BatchGetFansInfoRsp
+                err = wxproto.BatchGetFansInfo(lrsp.Data.Openid, &irsp)
                 if err != nil {
                     http.Error(w, err.Error(), http.StatusBadRequest)
                     return
@@ -275,7 +273,7 @@ func handle_admin() {
             return
         }
         mname := r.FormValue("mname")
-        mediaID, err := postMedia("./upload/" + mname, mtype)
+        mediaID, err := wxproto.PostMedia("./upload/" + mname, mtype)
         if err != nil {
             fmt.Printf("postMedia error: %v\n", err)
             http.Error(w, "", http.StatusBadRequest)
@@ -309,7 +307,7 @@ func handle_admin() {
 
         var rsp AdminMaterialListRsp
 
-        m, err := ListMaterial(mtype, 0, DefaultListMaterialCount)
+        m, err := wxproto.ListMaterial(mtype, 0, DefaultListMaterialCount)
         if err != nil {
             fmt.Println(err)
             http.Error(w, err.Error(), http.StatusBadRequest)
@@ -317,7 +315,7 @@ func handle_admin() {
         }
         rsp.Materials = append(rsp.Materials, m.Item...)
         for len(rsp.Materials) < m.TotalCount {
-            tmpm, err := ListMaterial(mtype, len(rsp.Materials), DefaultListMaterialCount)
+            tmpm, err := wxproto.ListMaterial(mtype, len(rsp.Materials), DefaultListMaterialCount)
             if err != nil {
                 fmt.Println(err)
                 http.Error(w, err.Error(), http.StatusBadRequest)
@@ -346,7 +344,7 @@ func handle_admin() {
 
         var rsp AdminMaterialGetRsp
 
-        url, err := GetMaterial(mediaID)
+        url, err := wxproto.GetMaterial(mediaID)
         if err != nil {
             fmt.Println(err)
             http.Error(w, err.Error(), http.StatusBadRequest)
@@ -364,7 +362,7 @@ func handle_admin() {
             return
         }
 
-        menu, err := GetMenu()
+        menu, err := wxproto.GetMenu()
         if err != nil {
             fmt.Println(err)
             http.Error(w, err.Error(), http.StatusBadRequest)
@@ -397,7 +395,7 @@ func handle_admin() {
         }
 
         var rsp AdminMenuUpdateRsp
-        err = CreateMenu(req.Button)
+        err = wxproto.CreateMenu(req.Button)
         if err != nil {
             http.Error(w, err.Error(), http.StatusBadRequest)
             return
@@ -412,7 +410,7 @@ func handle_admin() {
             return
         }
 
-        err := DeleteMenu()
+        err := wxproto.DeleteMenu()
         if err != nil {
             fmt.Println(err)
             http.Error(w, err.Error(), http.StatusBadRequest)

@@ -1,4 +1,4 @@
-package wxsdk
+package utils
 
 import (
 	"os"
@@ -16,7 +16,7 @@ const (
     ContentTypeText         = "text/plain"
 )
 
-func getJson(targetUrl string, reply interface{}) error {
+func GetJson(targetUrl string, reply interface{}) error {
 	resp, err := http.Get(targetUrl)
 	if err != nil {
 		return err
@@ -39,7 +39,7 @@ func getJson(targetUrl string, reply interface{}) error {
 }
 
 
-func postJson(targetUrl string, pkg interface{}) ([]byte, error) {
+func PostJson(targetUrl string, pkg interface{}) ([]byte, error) {
 	data, err := json.Marshal(pkg)
 	if err != nil {
 		fmt.Println(err)
@@ -64,7 +64,7 @@ func postJson(targetUrl string, pkg interface{}) ([]byte, error) {
 
 //给WX服务器发送请求，请求包一般为json格式
 //返回格式为文本格式或者二进制，需要区别处理
-func requestWeiXin(url string, pkg interface{}) (content []byte, contentType string, err error) {
+func RequestWeiXin(url string, pkg interface{}) (content []byte, contentType string, err error) {
     data, err := json.Marshal(pkg)
     if err != nil {
         fmt.Println(err)
@@ -88,7 +88,7 @@ func requestWeiXin(url string, pkg interface{}) (content []byte, contentType str
 }
 
 //上传文件，支持附带额外参数
-func postFile(url, filename, fieldname string, params map[string]string) ([]byte, error) {
+func PostFile(url, filename, fieldname string, params map[string]string) ([]byte, error) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 

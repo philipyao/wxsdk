@@ -1,9 +1,11 @@
-package wxsdk
+package access_token
 
 import(
     "fmt"
     "sync"
     "time"
+
+    "wxsdk/utils"
 )
 
 const (
@@ -22,7 +24,8 @@ type accessToken struct{
 }
 
 type TokenRsp struct {
-    WeiXinRspHeader
+    ErrorCode    int            `json:"errcode,omitempty"`
+    ErrorMessage string         `json:"errmsg,omitempty"`
 
     Token   string              `json:"access_token"`
     ExpireIn int                `json:"expires_in"`
@@ -38,7 +41,7 @@ var RefreshAccessToken func() (int, error)
 
 //========================================================
 //维护AccessToken
-func keepAccessToken() {
+func StartAccessToken() {
     var _token = new(accessToken)
 
     AccessToken = func() string {
@@ -48,27 +51,27 @@ func keepAccessToken() {
     }
 
     RefreshAccessToken = func() (int, error) {
-		token, expirein, err := requestAccessToken()
-		if err != nil {
-			fmt.Printf("requestAccessToken error %v\n", err)
-			return 0, err
-		}
-		fmt.Printf("requestAccessToken success: expire %v, token %v\n", expirein, token)
-		_token.Lock()
-		_token.token = token
-		_token.Unlock()
+        token, expirein, err := requestAccessToken()
+        if err != nil {
+            fmt.Printf("requestAccessToken error %v\n", err)
+            return 0, err
+        }
+        fmt.Printf("requestAccessToken success: expire %v, token %v\n", expirein, token)
+        _token.Lock()
+        _token.token = token
+        _token.Unlock()
 
-		return expirein, nil
-	}
+        return expirein, nil
+    }
 
     // for 循环刷新
     go func() {
         for {
-	        expirein, err := RefreshAccessToken()
-	        if err != nil {
-		        time.Sleep(time.Minute)
-		        continue
-	        }
+            expirein, err := RefreshAccessToken()
+            if err != nil {
+                time.Sleep(time.Minute)
+                continue
+            }
 
             timer := time.NewTimer(time.Second * time.Duration(expirein))
             <- timer.C
@@ -79,7 +82,7 @@ func keepAccessToken() {
 func requestAccessToken() (string, int, error) {
     url := fmt.Sprintf(UrlAccessToken, APPID, APPSecret)
     var rsp TokenRsp
-    err := getJson(url, &rsp)
+    err := utils.GetJson(url, &rsp)
     if err != nil {
         return "", 0, err
     }
@@ -88,3 +91,4 @@ func requestAccessToken() (string, int, error) {
     }
     return rsp.Token, rsp.ExpireIn, nil
 }
+

@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"time"
 	"encoding/xml"
+    "wxsdk/wxproto"
 )
 
-func processPlain(ctx *RequestContext, reqMsg *Message) {
+func processPlain(ctx *wxproto.RequestContext, reqMsg *wxproto.Message) {
 	hdl, ok := handles[reqMsg.MsgType]
 	if !ok {
 		fmt.Printf("unsupported msgtype %v\n", reqMsg.MsgType)
@@ -17,16 +18,16 @@ func processPlain(ctx *RequestContext, reqMsg *Message) {
 }
 
 
-func defaultPlainHandle(ctx *RequestContext, reqMsg *Message) {
+func defaultPlainHandle(ctx *wxproto.RequestContext, reqMsg *wxproto.Message) {
 	fmt.Printf("[plain]%+v\n", reqMsg)
 	replyOK(ctx)
 }
 
-func replyText(ctx *RequestContext, content string) {
+func replyText(ctx *wxproto.RequestContext, content string) {
 	doReply(ctx, buildText(content))
 }
 
-func doReply(ctx *RequestContext, rspMsg *Message) {
+func doReply(ctx *wxproto.RequestContext, rspMsg *wxproto.Message) {
 	rspMsg.CreateTime = uint32(time.Now().Unix())
 	rspMsg.ToUserName = ctx.ToUserName
 	rspMsg.FromUserName = ctx.FromUserName
@@ -38,13 +39,13 @@ func doReply(ctx *RequestContext, rspMsg *Message) {
 		return
 	}
 	//reply消息给微信服务器
-	ctx.w.Header().Set("Content-Type", "text/xml; charset=utf-8")
-	ctx.w.Write(data)
+	ctx.W.Header().Set("Content-Type", "text/xml; charset=utf-8")
+	ctx.W.Write(data)
 }
 
-func buildText(content string) *Message {
-	var rspMsg Message
-	rspMsg.MsgType = MsgTypeText
+func buildText(content string) *wxproto.Message {
+	var rspMsg wxproto.Message
+	rspMsg.MsgType = wxproto.MsgTypeText
 	rspMsg.Content = content
 	return &rspMsg
 }

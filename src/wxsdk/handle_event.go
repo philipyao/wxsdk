@@ -2,10 +2,11 @@ package wxsdk
 
 import (
 	"fmt"
+    "wxsdk/wxproto"
 )
 
-func processEvent(ctx *RequestContext, reqMsg *Message) {
-	event := MsgTypeEvent + MsgType("." + reqMsg.Event)
+func processEvent(ctx *wxproto.RequestContext, reqMsg *wxproto.Message) {
+	event := wxproto.MsgTypeEvent + wxproto.MsgType("." + reqMsg.Event)
 	hdl, ok := handles[event]
 	if !ok {
 		fmt.Printf("unsupported event %v\n", reqMsg.Event)
@@ -15,7 +16,7 @@ func processEvent(ctx *RequestContext, reqMsg *Message) {
 	hdl(ctx, reqMsg)
 }
 
-func defaultEventHandle(ctx *RequestContext, reqMsg *Message) {
+func defaultEventHandle(ctx *wxproto.RequestContext, reqMsg *wxproto.Message) {
 	fmt.Printf("[event]%+v\n", reqMsg)
 	replyOK(ctx)
 }
