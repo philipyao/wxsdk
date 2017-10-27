@@ -397,8 +397,8 @@ func handle_admin() {
         var rsp AdminMenuUpdateRsp
         err = wxproto.CreateMenu(req.Button)
         if err != nil {
-            http.Error(w, err.Error(), http.StatusBadRequest)
-            return
+            rsp.ErrCode = -1
+            rsp.ErrMessage = err.Error()
         }
         doWriteJson(w, rsp)
     })
@@ -429,4 +429,8 @@ func doWriteJson(w http.ResponseWriter, pkg interface{}) {
 
     w.Header().Set("Content-Type", "application/json")
     w.Write(data)
+}
+
+func doWriteError(w http.ResponseWriter, errmsg string) {
+    w.Write([]byte(errmsg))
 }
